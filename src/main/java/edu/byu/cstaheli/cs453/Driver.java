@@ -2,6 +2,8 @@ package edu.byu.cstaheli.cs453;
 
 import edu.byu.cstaheli.cs453.process.AolQueryLogsProcessor;
 import edu.byu.cstaheli.cs453.process.QueryLog;
+import edu.byu.cstaheli.cs453.process.WordTokenizer;
+import edu.byu.cstaheli.cs453.process.util.StopWordsRemover;
 import org.apache.commons.collections4.Trie;
 import org.apache.commons.collections4.trie.PatriciaTrie;
 
@@ -10,7 +12,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Scanner;
 import java.util.stream.Stream;
 
 /**
@@ -19,11 +23,43 @@ import java.util.stream.Stream;
 public class Driver
 {
     private List<QueryLog> queryLogs;
+
+    public Driver()
+    {
+        Trie<String, String> trie = new PatriciaTrie<>();
+        queryLogs = new ArrayList<>();
+    }
+
     public static void main(String[] args)
     {
         String resourcesDirectory = "src/main/resources";
         Driver driver = new Driver();
         driver.readInAolQueries(resourcesDirectory);
+        System.out.println("Enter a query. Type \"done\" to exit\n");
+        Scanner scanner = new Scanner(System.in);
+        String queryInput = scanner.nextLine();
+        while (!"done".equals(queryInput) && !"".equals(queryInput))
+        {
+            driver.processQuery(queryInput);
+            queryInput = scanner.nextLine();
+        }
+    }
+
+    private void processQuery(String query)
+    {
+        List<String> words = new WordTokenizer(query.toLowerCase()).getWords();
+        while(StopWordsRemover.getInstance().contains(words.get(0)))
+        {
+            if (words.size() > 1)
+            {
+                words = words.subList(1, words.size());
+            }
+            else
+            {
+                throw new RuntimeException("Your query contains only stopwords. This will not currently work for query expansion.");
+            }
+        }
+
     }
 
     private void readInAolQueries(String directory)
@@ -33,7 +69,7 @@ public class Driver
             paths
                     .filter(Files::isRegularFile)
                     .filter(path -> path.toString().endsWith(".txt"))
-                    .filter(path -> path.toString().contains("Clean-Data-"))
+                    .filter(path -> path.toString().contains("Clean-Data-01"))
                     .forEach(path ->
                     {
                         String fileName = path.toString();
@@ -47,11 +83,5 @@ public class Driver
             e.printStackTrace();
         }
         System.out.println();
-    }
-
-    public Driver()
-    {
-        Trie<String, String> trie = new PatriciaTrie<>();
-        queryLogs = new ArrayList<>();
     }
 }

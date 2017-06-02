@@ -29,7 +29,7 @@ public class AolQueryLogsProcessor
                     .collect(Collectors.toCollection(ArrayList<String[]>::new));
 
             //Dates looks like this 2006-03-28 20:39:58
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
             //The first line is the header. Skip it.
             for (int i = 1; i < lines.size(); ++i)
