@@ -1,9 +1,9 @@
-package edu.byu.cstaheli.cs453;
+package edu.byu.cstaheli.cs453.suggesting_similar_queries;
 
-import edu.byu.cstaheli.cs453.process.AolQueryLogsProcessor;
-import edu.byu.cstaheli.cs453.process.QueryLog;
-import edu.byu.cstaheli.cs453.process.WordTokenizer;
-import edu.byu.cstaheli.cs453.process.util.StopWordsRemover;
+import edu.byu.cstaheli.cs453.common.util.WordTokenizer;
+import edu.byu.cstaheli.cs453.common.util.StopWordsRemover;
+import edu.byu.cstaheli.cs453.suggesting_similar_queries.process.AolQueryLogsProcessor;
+import edu.byu.cstaheli.cs453.suggesting_similar_queries.process.QueryLog;
 import org.apache.commons.collections4.Trie;
 import org.apache.commons.collections4.trie.PatriciaTrie;
 
@@ -12,7 +12,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Stream;

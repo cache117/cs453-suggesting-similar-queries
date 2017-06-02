@@ -1,4 +1,4 @@
-package edu.byu.cstaheli.cs453.process.util;
+package edu.byu.cstaheli.cs453.common.util;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

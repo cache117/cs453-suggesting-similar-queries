@@ -1,6 +1,6 @@
-package edu.byu.cstaheli.cs453.process;
+package edu.byu.cstaheli.cs453.common.util;
 
-import edu.byu.cstaheli.cs453.process.util.Dictionary;
+import edu.byu.cstaheli.cs453.common.util.Dictionary;
 
 import java.util.ArrayList;
 import java.util.List;

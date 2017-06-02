@@ -1,4 +1,4 @@
-package edu.byu.cstaheli.cs453.process;
+package edu.byu.cstaheli.cs453.suggesting_similar_queries.process;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
