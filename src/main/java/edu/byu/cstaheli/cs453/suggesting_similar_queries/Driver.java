@@ -1,19 +1,19 @@
 package edu.byu.cstaheli.cs453.suggesting_similar_queries;
 
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import edu.byu.cstaheli.cs453.common.util.WordTokenizer;
-import edu.byu.cstaheli.cs453.common.util.StopWordsRemover;
 import edu.byu.cstaheli.cs453.suggesting_similar_queries.process.AolQueryLogsProcessor;
-import edu.byu.cstaheli.cs453.suggesting_similar_queries.process.QueryLog;
-import org.apache.commons.collections4.Trie;
-import org.apache.commons.collections4.trie.PatriciaTrie;
+import edu.byu.cstaheli.cs453.suggesting_similar_queries.rank.QueryLog;
+import edu.byu.cstaheli.cs453.suggesting_similar_queries.rank.QueryTrie;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -21,12 +21,11 @@ import java.util.stream.Stream;
  */
 public class Driver
 {
-    private List<QueryLog> queryLogs;
+    private QueryTrie queryLogs;
 
     public Driver()
     {
-        Trie<String, String> trie = new PatriciaTrie<>();
-        queryLogs = new ArrayList<>();
+        queryLogs = new QueryTrie();
     }
 
     public static void main(String[] args)
@@ -39,15 +38,16 @@ public class Driver
         String queryInput = scanner.nextLine();
         while (!"done".equals(queryInput) && !"".equals(queryInput))
         {
-            driver.processQuery(queryInput);
+            List<String> suggestedQueries = driver.processQuery(queryInput);
+            System.out.println(Arrays.toString(suggestedQueries.toArray()));
             queryInput = scanner.nextLine();
         }
     }
 
-    private void processQuery(String query)
+    private List<String> processQuery(String query)
     {
         List<String> words = new WordTokenizer(query.toLowerCase()).getWords();
-        while(StopWordsRemover.getInstance().contains(words.get(0)))
+        /*while (StopWordsRemover.getInstance().contains(words.get(0)))
         {
             if (words.size() > 1)
             {
@@ -57,8 +57,70 @@ public class Driver
             {
                 throw new RuntimeException("Your query contains only stopwords. This will not currently work for query expansion.");
             }
+        }*/
+
+        String sanitizedQuery = String.join(" ", words);
+        SortedMap<String, Collection<QueryLog>> prefixMap = this.queryLogs.prefixMap(sanitizedQuery);
+        Collection<QueryLog> exactMatches = prefixMap.get(sanitizedQuery);
+        Map<String, Collection<QueryLog>> filteredPrefixMap = filterOutOriginalQuery(sanitizedQuery, prefixMap);
+        List<String> suggestions = new ArrayList<>();
+        for (QueryLog exactMatch : exactMatches)
+        {
+            suggestions.addAll(getCloseQueriesFromSameUser(filteredPrefixMap, exactMatch));
+            System.out.println();
         }
 
+        return getBestSuggestions(suggestions, sanitizedQuery);
+    }
+
+    private List<String> getBestSuggestions(List<String> suggestions, String sanitizedQuery)
+    {
+        if (suggestions.size() <= 8)
+        {
+            return suggestions;
+        }
+        else
+        {
+            /*List<String> bestSuggestions = new ArrayList<>();
+
+            return bestSuggestions;*/
+            return suggestions.subList(0, 8);
+        }
+    }
+
+    private List<String> getCloseQueriesFromSameUser(Map<String, Collection<QueryLog>> filteredPrefixMap, QueryLog original)
+    {
+        return filteredPrefixMap.values()
+                .stream()
+                .filter(collection -> collection
+                        .stream()
+                        .anyMatch(queryLog -> queryLog
+                                .getAnonId()
+                                .equals(original.getAnonId())))
+                .filter(collection -> collection
+                        .stream()
+                        .anyMatch(queryLog -> ChronoUnit.MINUTES.between(original.getTimeStamp(), queryLog.getTimeStamp()) < 10))
+                .flatMap(Collection::stream)
+                .map(QueryLog::getQueryString)
+                .collect(Collectors.toList());
+    }
+
+    private Map<String, Collection<QueryLog>> filterOutOriginalQuery(String originalQuery, SortedMap<String, Collection<QueryLog>> prefixMap)
+    {
+        return prefixMap
+                .entrySet()
+                .stream()
+                .filter(entry -> entry
+                        .getValue()
+                        .stream()
+                        .noneMatch(
+                                queryLog ->
+                                {
+                                    return queryLog.
+                                            getQueryString().
+                                            equals(originalQuery);
+                                })
+                ).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     private void readInAolQueries(String directory)
@@ -73,7 +135,8 @@ public class Driver
                     {
                         String fileName = path.toString();
                         List<QueryLog> queryLogs = new AolQueryLogsProcessor(fileName).getQueryLogs();
-                        this.queryLogs.addAll(queryLogs);
+                        Multimap<String, QueryLog> queryLogMap = Multimaps.index(queryLogs, QueryLog::getQueryString);
+                        this.queryLogs.addAll(queryLogMap.asMap());
                     });
         }
 
@@ -81,6 +144,5 @@ public class Driver
         {
             e.printStackTrace();
         }
-        System.out.println();
     }
 }

@@ -1,4 +1,4 @@
-package edu.byu.cstaheli.cs453.suggesting_similar_queries.process;
+package edu.byu.cstaheli.cs453.suggesting_similar_queries.rank;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -6,7 +6,7 @@ import java.util.Arrays;
 /**
  * Created by cstaheli on 5/19/2017.
  */
-public class QueryLog
+public class QueryLog implements Comparable<QueryLog>
 {
     private final String anonId;
     private final String[] query;
@@ -27,6 +27,11 @@ public class QueryLog
     public String[] getQuery()
     {
         return query;
+    }
+
+    public String getQueryString()
+    {
+        return String.join(" ", query);
     }
 
     public LocalDateTime getTimeStamp()
@@ -61,5 +66,27 @@ public class QueryLog
     public String toString()
     {
         return String.format("%s\t%s\t%s\n", anonId, Arrays.toString(query), timeStamp.toString());
+    }
+
+    @Override
+    public int compareTo(QueryLog other)
+    {
+        int idComparison = this.anonId.compareTo(other.anonId);
+        if (idComparison == 0)
+        {
+            int timeComparison = this.timeStamp.compareTo(other.timeStamp);
+            if (timeComparison == 0)
+            {
+                return this.getQueryString().compareTo(other.getQueryString());
+            }
+            else
+            {
+                return timeComparison;
+            }
+        }
+        else
+        {
+            return idComparison;
+        }
     }
 }

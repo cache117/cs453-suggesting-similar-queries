@@ -1,5 +1,7 @@
 package edu.byu.cstaheli.cs453.suggesting_similar_queries.process;
 
+import edu.byu.cstaheli.cs453.suggesting_similar_queries.rank.QueryLog;
+
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
