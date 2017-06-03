@@ -130,7 +130,7 @@ public class Driver
             paths
                     .filter(Files::isRegularFile)
                     .filter(path -> path.toString().endsWith(".txt"))
-                    .filter(path -> path.toString().contains("Clean-Data-01"))
+                    .filter(path -> path.toString().contains("Clean-Data-"))
                     .forEach(path ->
                     {
                         String fileName = path.toString();
