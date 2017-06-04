@@ -2,6 +2,7 @@ package edu.byu.cstaheli.cs453.suggesting_similar_queries;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+import com.google.common.collect.TreeMultimap;
 import edu.byu.cstaheli.cs453.common.util.WordTokenizer;
 import edu.byu.cstaheli.cs453.suggesting_similar_queries.process.AolQueryLogsProcessor;
 import edu.byu.cstaheli.cs453.suggesting_similar_queries.rank.QueryLog;
@@ -21,11 +22,11 @@ import java.util.stream.Stream;
  */
 public class Driver
 {
-    private QueryTrie queryLogs;
+    private QueryTrie queryTrie;
 
     public Driver()
     {
-        queryLogs = new QueryTrie();
+        queryTrie = new QueryTrie();
     }
 
     public static void main(String[] args)
@@ -60,8 +61,14 @@ public class Driver
         }*/
 
         String sanitizedQuery = String.join(" ", words);
-        SortedMap<String, Collection<QueryLog>> prefixMap = this.queryLogs.prefixMap(sanitizedQuery);
+        SortedMap<String, Collection<QueryLog>> prefixMap = this.queryTrie.prefixMap(sanitizedQuery);
         Collection<QueryLog> exactMatches = prefixMap.get(sanitizedQuery);
+        if (exactMatches == null)
+        {
+            List<String> list = new ArrayList<>();
+            list.add("No query expansion available");
+            return list;
+        }
         Map<String, Collection<QueryLog>> filteredPrefixMap = filterOutOriginalQuery(sanitizedQuery, prefixMap);
         List<String> suggestions = new ArrayList<>();
         for (QueryLog exactMatch : exactMatches)
@@ -127,6 +134,7 @@ public class Driver
     {
         try (Stream<Path> paths = Files.walk(Paths.get(directory)))
         {
+            Multimap<String, QueryLog> multimap = TreeMultimap.create();
             paths
                     .filter(Files::isRegularFile)
                     .filter(path -> path.toString().endsWith(".txt"))
@@ -135,11 +143,12 @@ public class Driver
                     {
                         String fileName = path.toString();
                         List<QueryLog> queryLogs = new AolQueryLogsProcessor(fileName).getQueryLogs();
-                        Multimap<String, QueryLog> queryLogMap = Multimaps.index(queryLogs, QueryLog::getQueryString);
-                        this.queryLogs.addAll(queryLogMap.asMap());
+                        // Read logs into a multimap to preserve duplicates
+                        multimap.putAll(Multimaps.index(queryLogs, QueryLog::getQueryString));
                     });
+            //Put the multimap into the trie. It now also has duplicates.
+            queryTrie.addAll(multimap.asMap());
         }
-
         catch (IOException e)
         {
             e.printStackTrace();

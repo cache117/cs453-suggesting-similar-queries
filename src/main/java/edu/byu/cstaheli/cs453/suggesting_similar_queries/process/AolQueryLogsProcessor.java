@@ -52,7 +52,6 @@ public class AolQueryLogsProcessor
 
     private List<String> readFile(String fileName) throws IOException
     {
-        //A lot of the files aren't encoded with UTF-8
         return Files.readAllLines(Paths.get(fileName), Charset.forName("UTF-8"));
     }
 
