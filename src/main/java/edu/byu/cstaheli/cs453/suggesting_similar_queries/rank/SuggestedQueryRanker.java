@@ -102,12 +102,15 @@ public class SuggestedQueryRanker
     private double getWordCorrelationFactorOfQueries()
     {
         //SQ.length must be at least Q.length+1
-        assert originalQuery.length() < suggestedQuery.length();
+        String[] origQuery = originalQuery.split(" ");
+        String[] suggQuery = suggestedQuery.split(" ");
+        assert origQuery.length < suggQuery.length;
 
-        int lastWordInOriginalIndex = originalQuery.length() - 1;
-        String lastWordInOriginalQuery = originalQuery.split(" ")[lastWordInOriginalIndex];
-        String nextWordInSuggestedQuery = suggestedQuery.split(" ")[lastWordInOriginalIndex + 1];
+        int lastWordInOriginalIndex = origQuery.length - 1;
+        String lastWordInOriginalQuery = origQuery[lastWordInOriginalIndex];
+        String nextWordInSuggestedQuery = suggQuery[lastWordInOriginalIndex + 1];
         return WordCorrelationEvaluator.getWordCorrelationFactor(lastWordInOriginalQuery, nextWordInSuggestedQuery);
+        //return -1;
     }
 
     /**

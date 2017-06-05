@@ -5,6 +5,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 
 /**
  * Created by cstaheli on 6/2/2017.
@@ -34,6 +35,10 @@ public class WordCorrelationEvaluator
             String contentValue = contentDoc.body().text();
 
             return Double.parseDouble(contentValue);
+        }
+        catch (SocketTimeoutException e)
+        {
+            System.out.println("Unable to connect to peacock.cs.byu.edu. Probably the VPN crapped out");
         }
         catch (IOException e)
         {
