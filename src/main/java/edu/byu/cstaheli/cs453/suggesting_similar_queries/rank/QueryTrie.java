@@ -95,9 +95,9 @@ public class QueryTrie
         }
     }
 
-    public int frequencyOfAdjacency(String query, String suggestedQuery)
+    public int getFrequencyOfAdjacency(String query, String suggestedQuery)
     {
-        return (int) suggestionsFromQuery(query)
+        return (int) getAllSuggestionsFromQuery(query)
                 .stream()
                 .filter(queryLog -> queryLog
                         .getQueryString()
@@ -106,7 +106,7 @@ public class QueryTrie
                 .count();
     }
 
-    private Collection<QueryLog> suggestionsFromQuery(String query)
+    private Collection<QueryLog> getAllSuggestionsFromQuery(String query)
     {
         Collection<QueryLog> queryLogs = new ArrayList<>();
         Collection<QueryLog> exactMatches = exactMatch(query);
@@ -117,9 +117,9 @@ public class QueryTrie
         return queryLogs;
     }
 
-    public List<String> getSuggestionsFromQuery(String query)
+    public List<String> getUniqueQuerySuggestionsFromQuery(String query)
     {
-        return removeDuplicatesFromList(suggestionsFromQuery(query)
+        return removeDuplicatesFromList(getAllSuggestionsFromQuery(query)
                 .stream()
                 .map(QueryLog::getQueryString)
                 .collect(Collectors.toList())
@@ -165,6 +165,11 @@ public class QueryTrie
 
     public int getMostCommonFrequency()
     {
-        return 0;
+        return trie
+                .values()
+                .stream()
+                .mapToInt(Collection::size)
+                .max()
+                .orElse(-1);
     }
 }
