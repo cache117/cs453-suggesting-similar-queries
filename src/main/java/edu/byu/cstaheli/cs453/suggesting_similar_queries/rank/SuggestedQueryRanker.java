@@ -84,7 +84,7 @@ public class SuggestedQueryRanker
      */
     private double getOccurrenceOfSuggestedQuery()
     {
-        return trie.frequency(suggestedQuery) / trie.getMostCommonQueryFrequency();
+        return (double) trie.frequency(suggestedQuery) / (double) trie.getMostCommonQueryFrequency();
     }
 
     /**
@@ -124,7 +124,7 @@ public class SuggestedQueryRanker
      */
     private double getNumberOfDirectModifications()
     {
-        return trie.getFrequencyOfAdjacency(originalQuery, suggestedQuery) / trie.getMostCommonQueryFrequency();
+        return (double) trie.getFrequencyOfAdjacency(originalQuery, suggestedQuery) / (double) trie.getMostCommonQueryFrequency();
     }
 
     public double getRank()
