@@ -68,7 +68,7 @@ public class QueryTrie
                                 queryLog ->
                                 {
                                     return queryLog.
-                                            getQueryString().
+                                            getQuery().
                                             equals(query);
                                 })
                 ).collect(Collectors.toMap(Map.Entry::getKey,
@@ -101,7 +101,7 @@ public class QueryTrie
         return (int) getAllSuggestionsFromQuery(query)
                 .stream()
                 .filter(queryLog -> queryLog
-                        .getQueryString()
+                        .getQuery()
                         .equals(suggestedQuery)
                 )
                 .count();
@@ -122,14 +122,14 @@ public class QueryTrie
     {
         return removeDuplicatesFromList(getAllSuggestionsFromQuery(query)
                 .stream()
-                .map(QueryLog::getQueryString)
+                .map(QueryLog::getQuery)
                 .collect(Collectors.toList())
         );
     }
 
     private Collection<QueryLog> modifiedQueriesFromOriginal(QueryLog original)
     {
-        return prefixMapWithoutOriginalQuery(original.getQueryString()).values()
+        return prefixMapWithoutOriginalQuery(original.getQuery()).values()
                 .stream()
                 .filter(collection -> collection
                         .stream()
@@ -140,27 +140,7 @@ public class QueryTrie
                         .stream()
                         .anyMatch(queryLog -> ChronoUnit.MINUTES.between(original.getTimeStamp(), queryLog.getTimeStamp()) < 10))
                 .flatMap(Collection::stream)
-                .collect(Collectors.toList());
-    }
-
-    private Collection<QueryLog> modifiedQueriesFromOriginalFirstOnly(QueryLog original)
-    {
-        Stream<Collection<QueryLog>> collectionStream = prefixMapWithoutOriginalQuery(original.getQueryString()).values()
-                .stream()
-                .filter(collection -> collection
-                        .stream()
-                        .anyMatch(queryLog -> queryLog
-                                .getAnonId()
-                                .equals(original.getAnonId())));
-        return collectionStream.filter(collection -> collection
-                .stream()
-                .anyMatch(queryLog -> queryLog.equals(collectionStream.
-                        flatMap(Collection::stream)
-                        .findFirst()
-                        .orElse(null))
-                )
-        )
-                .flatMap(Collection::stream)
+                .filter(queryLog -> queryLog.getQuery().contains(original.getQuery() + " "))
                 .collect(Collectors.toList());
     }
 

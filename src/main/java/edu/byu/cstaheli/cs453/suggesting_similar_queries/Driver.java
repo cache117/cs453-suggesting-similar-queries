@@ -144,7 +144,7 @@ public class Driver
                         String fileName = path.toString();
                         List<QueryLog> queryLogs = new AolQueryLogsProcessor(fileName).getQueryLogs();
                         // Read logs into a multimap to preserve duplicates
-                        multimap.putAll(Multimaps.index(queryLogs, QueryLog::getQueryString));
+                        multimap.putAll(Multimaps.index(queryLogs, QueryLog::getQuery));
                     });
             //Put the multimap into the trie. It now also has duplicates.
             queryTrie.addAll(multimap.asMap());

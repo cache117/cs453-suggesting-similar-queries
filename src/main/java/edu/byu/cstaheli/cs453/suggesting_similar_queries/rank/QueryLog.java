@@ -1,7 +1,6 @@
 package edu.byu.cstaheli.cs453.suggesting_similar_queries.rank;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 
 /**
  * Created by cstaheli on 5/19/2017.
@@ -9,13 +8,14 @@ import java.util.Arrays;
 public class QueryLog implements Comparable<QueryLog>
 {
     private final String anonId;
-    private final String[] query;
+    private final String query;
     private final LocalDateTime timeStamp;
 
     public QueryLog(String anonId, String[] query, LocalDateTime timeStamp)
     {
         this.anonId = anonId;
-        this.query = query;
+        this.query = String.join(" ", query);
+        ;
         this.timeStamp = timeStamp;
     }
 
@@ -24,12 +24,7 @@ public class QueryLog implements Comparable<QueryLog>
         return anonId;
     }
 
-    public String[] getQuery()
-    {
-        return query;
-    }
-
-    public String getQueryString()
+    public String getQuery()
     {
         return String.join(" ", query);
     }
@@ -48,8 +43,7 @@ public class QueryLog implements Comparable<QueryLog>
         QueryLog log = (QueryLog) o;
 
         if (!anonId.equals(log.anonId)) return false;
-        // Probably incorrect - comparing Object[] arrays with Arrays.equals
-        if (!Arrays.equals(query, log.query)) return false;
+        if (!query.equals(log.query)) return false;
         return timeStamp.equals(log.timeStamp);
     }
 
@@ -57,7 +51,7 @@ public class QueryLog implements Comparable<QueryLog>
     public int hashCode()
     {
         int result = anonId.hashCode();
-        result = 31 * result + Arrays.hashCode(query);
+        result = 31 * result + query.hashCode();
         result = 31 * result + timeStamp.hashCode();
         return result;
     }
@@ -65,7 +59,7 @@ public class QueryLog implements Comparable<QueryLog>
     @Override
     public String toString()
     {
-        return String.format("%s\t%s\t%s\n", anonId, Arrays.toString(query), timeStamp.toString());
+        return String.format("%s\t[%s]\t%s\n", anonId, query, timeStamp.toString());
     }
 
     @Override
@@ -77,7 +71,7 @@ public class QueryLog implements Comparable<QueryLog>
             int timeComparison = this.timeStamp.compareTo(other.timeStamp);
             if (timeComparison == 0)
             {
-                return this.getQueryString().compareTo(other.getQueryString());
+                return this.getQuery().compareTo(other.getQuery());
             }
             else
             {
