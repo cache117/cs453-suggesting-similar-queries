@@ -14,7 +14,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -35,24 +38,41 @@ public class Driver
         String resourcesDirectory = "src/main/resources";
         Driver driver = new Driver();
         driver.readInAolQueries(resourcesDirectory);
-        System.out.println("Enter a query. Type \"done\" to exit\n");
+        printOutPrompt();
         Scanner scanner = new Scanner(System.in);
         String queryInput = scanner.nextLine();
         while (!"done".equals(queryInput) && !"".equals(queryInput))
         {
             List<String> suggestedQueries = driver.processQuery(queryInput);
             driver.outputSuggestedQueries(suggestedQueries);
+            printOutPrompt();
             queryInput = scanner.nextLine();
         }
     }
 
+    private static void printOutPrompt()
+    {
+        System.out.println("\nEnter a query. Type \"done\" to exit");
+    }
+
     private void outputSuggestedQueries(List<String> suggestedQueries)
     {
-        System.out.println("Suggested Queries:");
-        for (String query : suggestedQueries)
+        if (suggestedQueries.size() == 0)
         {
-            System.out.println(query);
+            System.out.println("No suggestions found. Possible reasons:");
+            System.out.println("The original query doesn't appear in the AOL query logs");
+            System.out.println("The original query was never expanded in the AOL query logs");
+            System.out.println("Something went really horribly wrong with the code (Oh please, oh please not)");
         }
+        else
+        {
+            System.out.println("Suggested Queries:");
+            for (String query : suggestedQueries)
+            {
+                System.out.println(query);
+            }
+        }
+        System.out.println();
     }
 
     private List<String> processQuery(String query)
@@ -66,7 +86,7 @@ public class Driver
     private String getSanitizedQuery(String query)
     {
         List<String> queryWords = new WordTokenizer(query.toLowerCase()).getWords();
-        queryWords = removeLeadingStopwords(queryWords);
+        //queryWords = removeLeadingStopwords(queryWords);
         return String.join(" ", queryWords);
     }
 

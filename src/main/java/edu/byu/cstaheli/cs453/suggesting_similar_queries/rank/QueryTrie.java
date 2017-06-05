@@ -79,7 +79,8 @@ public class QueryTrie
 
     public Collection<QueryLog> exactMatch(String query)
     {
-        return trie.get(query);
+        Collection<QueryLog> result = trie.get(query);
+        return (result == null) ? new ArrayList<>(0) : result;
     }
 
     public int frequency(String query)
