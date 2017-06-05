@@ -84,7 +84,7 @@ public class SuggestedQueryRanker
      */
     private double getOccurrenceOfSuggestedQuery()
     {
-        return trie.frequency(suggestedQuery) / trie.getMostCommonFrequency();
+        return trie.frequency(suggestedQuery) / trie.getMostCommonQueryFrequency();
     }
 
     /**
@@ -109,8 +109,8 @@ public class SuggestedQueryRanker
         int lastWordInOriginalIndex = origQuery.length - 1;
         String lastWordInOriginalQuery = origQuery[lastWordInOriginalIndex];
         String nextWordInSuggestedQuery = suggQuery[lastWordInOriginalIndex + 1];
-        return WordCorrelationEvaluator.getWordCorrelationFactor(lastWordInOriginalQuery, nextWordInSuggestedQuery);
-        //return -1;
+        //return WordCorrelationEvaluator.getWordCorrelationFactor(lastWordInOriginalQuery, nextWordInSuggestedQuery);
+        return -1;
     }
 
     /**
@@ -124,7 +124,7 @@ public class SuggestedQueryRanker
      */
     private double getNumberOfDirectModifications()
     {
-        return trie.getFrequencyOfAdjacency(originalQuery, suggestedQuery) / trie.getMostCommonFrequency();
+        return trie.getFrequencyOfAdjacency(originalQuery, suggestedQuery) / trie.getMostCommonQueryFrequency();
     }
 
     public double getRank()

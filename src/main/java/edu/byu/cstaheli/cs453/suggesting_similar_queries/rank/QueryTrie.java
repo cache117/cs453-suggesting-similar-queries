@@ -5,9 +5,7 @@ import org.apache.commons.collections4.trie.PatriciaTrie;
 
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Created by cstaheli on 6/2/2017.
@@ -15,24 +13,11 @@ import java.util.stream.Stream;
 public class QueryTrie
 {
     private Trie<String, Collection<QueryLog>> trie;
-
-    public QueryTrie(Map<String, Collection<QueryLog>> inputs)
-    {
-        this.trie = new PatriciaTrie<>(inputs);
-        System.out.println();
-    }
+    private int mostCommonQueryFrequency;
 
     public QueryTrie()
     {
         this.trie = new PatriciaTrie<>();
-    }
-
-    private static <T> BinaryOperator<T> throwingMerger()
-    {
-        return (u, v) ->
-        {
-            throw new IllegalStateException(String.format("Duplicate key %s", u));
-        };
     }
 
     /**
@@ -49,6 +34,8 @@ public class QueryTrie
     public void addAll(Map<String, Collection<QueryLog>> inputs)
     {
         this.trie.putAll(inputs);
+        // Set the frequency once so that it doesn't have to be re-calculated many many times.
+        mostCommonQueryFrequency = this.getMostCommonFrequency();
     }
 
     public SortedMap<String, Collection<QueryLog>> prefixMap(String query)
@@ -56,7 +43,7 @@ public class QueryTrie
         return trie.prefixMap(query);
     }
 
-    public SortedMap<String, Collection<QueryLog>> prefixMapWithoutOriginalQuery(String query)
+    public Map<String, Collection<QueryLog>> prefixMapWithoutOriginalQuery(String query)
     {
         return prefixMap(query)
                 .entrySet()
@@ -71,10 +58,7 @@ public class QueryTrie
                                             getQuery().
                                             equals(query);
                                 })
-                ).collect(Collectors.toMap(Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        throwingMerger(),
-                        TreeMap::new));
+                ).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     public Collection<QueryLog> exactMatch(String query)
@@ -85,15 +69,7 @@ public class QueryTrie
 
     public int frequency(String query)
     {
-        Collection<QueryLog> queryLogs = this.exactMatch(query);
-        if (queryLogs != null)
-        {
-            return queryLogs.size();
-        }
-        else
-        {
-            return -1;
-        }
+        return this.exactMatch(query).size();
     }
 
     public int getFrequencyOfAdjacency(String query, String suggestedQuery)
@@ -131,20 +107,21 @@ public class QueryTrie
     {
         return prefixMapWithoutOriginalQuery(original.getQuery()).values()
                 .stream()
-                .filter(collection -> collection
-                        .stream()
-                        .anyMatch(queryLog -> queryLog
-                                .getAnonId()
-                                .equals(original.getAnonId())))
-                .filter(collection -> collection
-                        .stream()
-                        .anyMatch(queryLog -> ChronoUnit.MINUTES.between(original.getTimeStamp(), queryLog.getTimeStamp()) < 10))
                 .flatMap(Collection::stream)
+                .filter(queryLog -> queryLog
+                        .getAnonId()
+                        .equals(original.getAnonId())
+                )
+                .filter(queryLog -> ChronoUnit.MINUTES.between(
+                        original.getTimeStamp()
+                        , queryLog.getTimeStamp()
+                        ) <= 10
+                )
                 .filter(queryLog -> queryLog.getQuery().contains(original.getQuery() + " "))
                 .collect(Collectors.toList());
     }
 
-    public int getMostCommonFrequency()
+    private int getMostCommonFrequency()
     {
         return trie
                 .values()
@@ -152,5 +129,10 @@ public class QueryTrie
                 .mapToInt(Collection::size)
                 .max()
                 .orElse(-1);
+    }
+
+    public int getMostCommonQueryFrequency()
+    {
+        return mostCommonQueryFrequency;
     }
 }

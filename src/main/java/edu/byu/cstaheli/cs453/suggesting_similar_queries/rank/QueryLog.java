@@ -5,17 +5,16 @@ import java.time.LocalDateTime;
 /**
  * Created by cstaheli on 5/19/2017.
  */
-public class QueryLog implements Comparable<QueryLog>
+public class QueryLog
 {
     private final String anonId;
     private final String query;
     private final LocalDateTime timeStamp;
 
-    public QueryLog(String anonId, String[] query, LocalDateTime timeStamp)
+    public QueryLog(String anonId, String query, LocalDateTime timeStamp)
     {
         this.anonId = anonId;
-        this.query = String.join(" ", query);
-        ;
+        this.query = query;
         this.timeStamp = timeStamp;
     }
 
@@ -26,7 +25,7 @@ public class QueryLog implements Comparable<QueryLog>
 
     public String getQuery()
     {
-        return String.join(" ", query);
+        return query;
     }
 
     public LocalDateTime getTimeStamp()
@@ -60,27 +59,5 @@ public class QueryLog implements Comparable<QueryLog>
     public String toString()
     {
         return String.format("%s\t[%s]\t%s\n", anonId, query, timeStamp.toString());
-    }
-
-    @Override
-    public int compareTo(QueryLog other)
-    {
-        int idComparison = this.anonId.compareTo(other.anonId);
-        if (idComparison == 0)
-        {
-            int timeComparison = this.timeStamp.compareTo(other.timeStamp);
-            if (timeComparison == 0)
-            {
-                return this.getQuery().compareTo(other.getQuery());
-            }
-            else
-            {
-                return timeComparison;
-            }
-        }
-        else
-        {
-            return idComparison;
-        }
     }
 }

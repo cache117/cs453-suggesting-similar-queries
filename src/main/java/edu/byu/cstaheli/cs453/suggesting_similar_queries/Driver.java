@@ -1,8 +1,8 @@
 package edu.byu.cstaheli.cs453.suggesting_similar_queries;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import com.google.common.collect.TreeMultimap;
 import edu.byu.cstaheli.cs453.common.util.StopWordsRemover;
 import edu.byu.cstaheli.cs453.common.util.WordTokenizer;
 import edu.byu.cstaheli.cs453.suggesting_similar_queries.process.AolQueryLogsProcessor;
@@ -134,7 +134,7 @@ public class Driver
     {
         try (Stream<Path> paths = Files.walk(Paths.get(directory)))
         {
-            Multimap<String, QueryLog> multimap = TreeMultimap.create();
+            Multimap<String, QueryLog> multimap = HashMultimap.create();
             paths
                     .filter(Files::isRegularFile)
                     .filter(path -> path.toString().endsWith(".txt"))
