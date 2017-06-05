@@ -109,8 +109,8 @@ public class SuggestedQueryRanker
         int lastWordInOriginalIndex = origQuery.length - 1;
         String lastWordInOriginalQuery = origQuery[lastWordInOriginalIndex];
         String nextWordInSuggestedQuery = suggQuery[lastWordInOriginalIndex + 1];
-        //return WordCorrelationEvaluator.getWordCorrelationFactor(lastWordInOriginalQuery, nextWordInSuggestedQuery);
-        return -1;
+        return WordCorrelationEvaluator.getWordCorrelationFactor(lastWordInOriginalQuery, nextWordInSuggestedQuery);
+        //return -1;
     }
 
     /**
