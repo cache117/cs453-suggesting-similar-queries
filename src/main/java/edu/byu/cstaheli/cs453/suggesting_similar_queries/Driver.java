@@ -14,10 +14,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -121,11 +118,11 @@ public class Driver
             double rank = new SuggestedQueryRanker(originalQuery, suggestedQuery, queryTrie).getRank();
             queryRanks.put(suggestedQuery, rank);
         }
-        // return a list that is sorted by the values in the Map
+        // return a list that is sorted by the values in the Map in descending order
         return queryRanks
                 .entrySet()
                 .stream()
-                .sorted(Map.Entry.comparingByValue(/*Collections.reverseOrder()*/))
+                .sorted(Map.Entry.comparingByValue(Collections.reverseOrder()))
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
     }
