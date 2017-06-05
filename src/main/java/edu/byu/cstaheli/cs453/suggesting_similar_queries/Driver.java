@@ -3,10 +3,12 @@ package edu.byu.cstaheli.cs453.suggesting_similar_queries;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.TreeMultimap;
+import edu.byu.cstaheli.cs453.common.util.StopWordsRemover;
 import edu.byu.cstaheli.cs453.common.util.WordTokenizer;
 import edu.byu.cstaheli.cs453.suggesting_similar_queries.process.AolQueryLogsProcessor;
 import edu.byu.cstaheli.cs453.suggesting_similar_queries.rank.QueryLog;
 import edu.byu.cstaheli.cs453.suggesting_similar_queries.rank.QueryTrie;
+import edu.byu.cstaheli.cs453.suggesting_similar_queries.rank.SuggestedQueryRanker;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -40,15 +42,38 @@ public class Driver
         while (!"done".equals(queryInput) && !"".equals(queryInput))
         {
             List<String> suggestedQueries = driver.processQuery(queryInput);
-            System.out.println(Arrays.toString(suggestedQueries.toArray()));
+            driver.outputSuggestedQueries(suggestedQueries);
             queryInput = scanner.nextLine();
+        }
+    }
+
+    private void outputSuggestedQueries(List<String> suggestedQueries)
+    {
+        System.out.println("Suggested Queries:");
+        for (String query : suggestedQueries)
+        {
+            System.out.println(query);
         }
     }
 
     private List<String> processQuery(String query)
     {
-        List<String> words = new WordTokenizer(query.toLowerCase()).getWords();
-        /*while (StopWordsRemover.getInstance().contains(words.get(0)))
+        String sanitizedQuery = getSanitizedQuery(query);
+        List<String> suggestions = queryTrie.getSuggestionsFromQuery(sanitizedQuery);
+
+        return getBestSuggestions(suggestions, sanitizedQuery);
+    }
+
+    private String getSanitizedQuery(String query)
+    {
+        List<String> queryWords = new WordTokenizer(query.toLowerCase()).getWords();
+        queryWords = removeLeadingStopwords(queryWords);
+        return String.join(" ", queryWords);
+    }
+
+    private List<String> removeLeadingStopwords(List<String> words)
+    {
+        while (StopWordsRemover.getInstance().contains(words.get(0)))
         {
             if (words.size() > 1)
             {
@@ -58,76 +83,32 @@ public class Driver
             {
                 throw new RuntimeException("Your query contains only stopwords. This will not currently work for query expansion.");
             }
-        }*/
-
-        String sanitizedQuery = String.join(" ", words);
-        SortedMap<String, Collection<QueryLog>> prefixMap = this.queryTrie.prefixMap(sanitizedQuery);
-        Collection<QueryLog> exactMatches = prefixMap.get(sanitizedQuery);
-        if (exactMatches == null)
-        {
-            List<String> list = new ArrayList<>();
-            list.add("No query expansion available");
-            return list;
         }
-        Map<String, Collection<QueryLog>> filteredPrefixMap = filterOutOriginalQuery(sanitizedQuery, prefixMap);
-        List<String> suggestions = new ArrayList<>();
-        for (QueryLog exactMatch : exactMatches)
-        {
-            suggestions.addAll(getCloseQueriesFromSameUser(filteredPrefixMap, exactMatch));
-            System.out.println();
-        }
-
-        return getBestSuggestions(suggestions, sanitizedQuery);
+        return words;
     }
 
     private List<String> getBestSuggestions(List<String> suggestions, String sanitizedQuery)
     {
-        if (suggestions.size() <= 8)
-        {
-            return suggestions;
-        }
-        else
-        {
-            /*List<String> bestSuggestions = new ArrayList<>();
-
-            return bestSuggestions;*/
-            return suggestions.subList(0, 8);
-        }
+        suggestions = sortAndRankSuggestedQueries(suggestions, sanitizedQuery);
+        return (suggestions.size() <= 8) ? suggestions : suggestions.subList(0, 8);
     }
 
-    private List<String> getCloseQueriesFromSameUser(Map<String, Collection<QueryLog>> filteredPrefixMap, QueryLog original)
+    private List<String> sortAndRankSuggestedQueries(List<String> suggestedQueries, String originalQuery)
     {
-        return filteredPrefixMap.values()
-                .stream()
-                .filter(collection -> collection
-                        .stream()
-                        .anyMatch(queryLog -> queryLog
-                                .getAnonId()
-                                .equals(original.getAnonId())))
-                .filter(collection -> collection
-                        .stream()
-                        .anyMatch(queryLog -> ChronoUnit.MINUTES.between(original.getTimeStamp(), queryLog.getTimeStamp()) < 10))
-                .flatMap(Collection::stream)
-                .map(QueryLog::getQueryString)
-                .collect(Collectors.toList());
-    }
-
-    private Map<String, Collection<QueryLog>> filterOutOriginalQuery(String originalQuery, SortedMap<String, Collection<QueryLog>> prefixMap)
-    {
-        return prefixMap
+        // Put the values into a map from the query to their ranking score so that it can later get a sorted
+        Map<String, Double> queryRanks = new HashMap<>(suggestedQueries.size());
+        for (String suggestedQuery : suggestedQueries)
+        {
+            double rank = new SuggestedQueryRanker(originalQuery, suggestedQuery, queryTrie).getRank();
+            queryRanks.put(suggestedQuery, rank);
+        }
+        // return a list that is sorted by the values in the Map
+        return queryRanks
                 .entrySet()
                 .stream()
-                .filter(entry -> entry
-                        .getValue()
-                        .stream()
-                        .noneMatch(
-                                queryLog ->
-                                {
-                                    return queryLog.
-                                            getQueryString().
-                                            equals(originalQuery);
-                                })
-                ).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                .sorted(Map.Entry.comparingByValue(/*Collections.reverseOrder()*/))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
     }
 
     private void readInAolQueries(String directory)
